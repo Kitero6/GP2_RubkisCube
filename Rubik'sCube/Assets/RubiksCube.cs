@@ -933,44 +933,15 @@ public class RubiksCube : MonoBehaviour
             }
         }
 
-        if (up.CheckFaceDone() &&
-            down.CheckFaceDone() &&
-            right.CheckFaceDone() &&
-            left.CheckFaceDone() &&
-            back.CheckFaceDone() &&
-            front.CheckFaceDone())
+        if (up.CheckFaceDone(1, 0.1f) &&
+            down.CheckFaceDone(1, 0.1f) &&
+            right.CheckFaceDone(0, 0.1f) &&
+            left.CheckFaceDone(0, 0.1f) &&
+            back.CheckFaceDone(2, 0.1f) &&
+            front.CheckFaceDone(2, 0.1f))
             return true;
 
         return false;
-
-        //bool finish = true;
-
-        /*if (!up.CheckFaceDone()) 
-        {
-            finish = false;
-        }
-        else if (!down.CheckFaceDone())
-        {
-            finish = false;
-        }
-        else if (!right.CheckFaceDone())
-        {
-            finish = false;
-        }
-        else if (!left.CheckFaceDone())
-        {
-            finish = false;
-        }
-        else if (!back.CheckFaceDone())
-        {
-            finish = false;
-        }
-        else if (!front.CheckFaceDone())
-        {
-            finish = false;
-        }*/
-
-        //return finish;
     }
 
     void TurnAroundRight(int numTurn, bool neg)

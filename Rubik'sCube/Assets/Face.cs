@@ -77,19 +77,47 @@ public class Face
         for (int i = 0; i < _cubeInFace.Count; i++)
         {
             currentCube = _cubeInFace[i];
-            for (int j = 0; j < currentCube._spriteList.Count; j++)
-            {
-                currentSpriteRenderer = currentCube._spriteList[j];
-                for (int k = 0; k < SpritePossible.Count; k++)
-                {
-                    if (currentSpriteRenderer.sprite == SpritePossible[k] && currentSpriteRenderer.transform.rotation.eulerAngles != SpriteRot[k].eulerAngles/* && currentSpriteRenderer.transform.rotation * -1 != SpriteRot[k]*/)
-                    {
-                        return false;
-                    }
-                }
-            }
-        }
 
+            int j = 0;
+            if (!SpriteIsPossible(currentCube, SpritePossible, ref j))
+                return false;
+
+            currentSpriteRenderer = currentCube._spriteList[j];
+
+            bool At90degre = false;
+            switch (switchPosition)
+            {
+                case 0:
+                    if (currentSpriteRenderer.transform.rotation.eulerAngles.y < SpriteRot[0].rotation.eulerAngles.y + epsilon &&
+                        currentSpriteRenderer.transform.rotation.eulerAngles.y > SpriteRot[0].rotation.eulerAngles.y - epsilon &&
+                        currentSpriteRenderer.transform.rotation.eulerAngles.x < SpriteRot[0].rotation.eulerAngles.x + epsilon &&
+                        currentSpriteRenderer.transform.rotation.eulerAngles.x > SpriteRot[0].rotation.eulerAngles.x - epsilon)
+                        At90degre = true;
+                    break;
+
+                case 1:
+                    if (currentSpriteRenderer.transform.rotation.eulerAngles.x < SpriteRot[0].rotation.eulerAngles.x + epsilon &&
+                        currentSpriteRenderer.transform.rotation.eulerAngles.x > SpriteRot[0].rotation.eulerAngles.x - epsilon &&
+                        currentSpriteRenderer.transform.rotation.eulerAngles.y < SpriteRot[0].rotation.eulerAngles.y + epsilon &&
+                        currentSpriteRenderer.transform.rotation.eulerAngles.y > SpriteRot[0].rotation.eulerAngles.y - epsilon)
+                        At90degre = true;
+                    break;
+
+                case 2:
+                    if (currentSpriteRenderer.transform.rotation.eulerAngles.x < SpriteRot[0].rotation.eulerAngles.x + epsilon &&
+                        currentSpriteRenderer.transform.rotation.eulerAngles.x > SpriteRot[0].rotation.eulerAngles.x - epsilon &&
+                        currentSpriteRenderer.transform.rotation.eulerAngles.y < SpriteRot[0].rotation.eulerAngles.y + epsilon &&
+                        currentSpriteRenderer.transform.rotation.eulerAngles.y > SpriteRot[0].rotation.eulerAngles.y - epsilon)
+                        At90degre = true;
+                    break;
+
+                default:
+                    break;
+            }
+
+            if (!At90degre)
+                return false;
+        }
         return true;
     }
 }
