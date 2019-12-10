@@ -717,62 +717,34 @@ public class RubiksCube : MonoBehaviour
 
         if (rotationVector == Vector3.right || rotationVector == -Vector3.right)
         {
-            //meme x
-            //Calc Center Of Face
-            //_faceToRotate._centerOfFace = CalcCenter(0, positionOfClickedCube);
-
             //Take all cube in the face
             for (int j = 0; j < _numCubes; j++)
-            {
                 for (int k = 0; k < _numCubes; k++)
-                {
                     _face._cubeInFace.Add(_listCube[(int)_positionOfClickedCube.x, j, k]);
-                }
-            }
         }
         else if (rotationVector == Vector3.up || rotationVector == -Vector3.up)
         {
-            //meme y
-            //Calc Center Of Face
-            //_faceToRotate._centerOfFace = CalcCenter(1, positionOfClickedCube);
-
             //Take all cube in the face
             for (int i = 0; i < _numCubes; i++)
-            {
                 for (int k = 0; k < _numCubes; k++)
-                {
                     _face._cubeInFace.Add(_listCube[i, (int)_positionOfClickedCube.y, k]);
-                }
-            }
         }
         else if (rotationVector == Vector3.forward || rotationVector == -Vector3.forward)
         {
-            //meme z
-            //Calc Center Of Face
-            //_faceToRotate._centerOfFace = CalcCenter(2, positionOfClickedCube);
-
             //Take all cube in the face
             for (int i = 0; i < _numCubes; i++)
-            {
                 for (int j = 0; j < _numCubes; j++)
-                {
                     _face._cubeInFace.Add(_listCube[i, j, (int)_positionOfClickedCube.z]);
-                }
-            }
         }
-
     }
 
     Vector3 GetPosOfCubeInListOfCube(ref Cube cube)
     {
         int lastRow = _numCubes - 1;
 
-        /*for (int i = 0; i < _numCubes; i += lastRow - 1)
-            for (int j = 0; j < _numCubes; j += lastRow - 1)
-                for (int k = 0; k < _numCubes; k += lastRow - 1)
-                    if (cube == _listCube[i, j, k])
-                        return new Vector3(j, j, k);*/
+        /* Optimisation : Check only cube on the outside of the rubiks cube */
 
+        /* browse on the face up and down */
         for (int j = 0; j < _numCubes; ++j)
         {
             for (int k = 0; k < _numCubes; ++k)
@@ -788,6 +760,7 @@ public class RubiksCube : MonoBehaviour
             }
         }
 
+        /* browse on the face right and left */
         for (int i = 0; i < _numCubes; ++i)
         {
             for (int k = 0; k < _numCubes; ++k)
@@ -803,6 +776,7 @@ public class RubiksCube : MonoBehaviour
             }
         }
 
+        /* browse on the face front and back */
         for (int i = 0; i < _numCubes; ++i)
         {
             for (int j = 0; j < _numCubes; ++j)
@@ -836,6 +810,7 @@ public class RubiksCube : MonoBehaviour
 
         numTurn = Mathf.Abs(numTurn);        
 
+        /* Search Which rotation have been done, in order to Update The Rube Array */
         if (currRot == Vector3.right)
             TurnAroundRight(numTurn, false);
         else if (currRot == -Vector3.right)
@@ -854,6 +829,7 @@ public class RubiksCube : MonoBehaviour
     {
         if (!neg)
         {
+            /* swap 4 four in counterclockwise */
             Cube tmp = cube4;
             cube4 = cube3;
             cube3 = cube2;
@@ -862,51 +838,28 @@ public class RubiksCube : MonoBehaviour
         }
         else
         {
+            /* swap 4 four in clockwise */
             Cube tmp = cube1;
             cube1 = cube2;
             cube2 = cube3;
             cube3 = cube4;
             cube4 = tmp;
         }
-            /*Cube tmp = cube1;
-            cube1 = cube2;
-            cube2 = tmp;
+    }
 
-            tmp = cube3;
-            cube3 = cube4;
-            cube4 = tmp;
-            Debug.Log(neg);
+        bool CheckWinCondition()
+        {
+            Face up = new Face();
+            Face down = new Face();
+            Face right = new Face();
+            Face left = new Face();
+            Face back = new Face();
+            Face front = new Face();
 
-            if (neg)
-            {
-               // Debug.Log("neg");
-               // Debug.Log("is neg ");
-               // Debug.Log("c'est vraiment neg ");
-                tmp = cube1;
-                cube1 = cube3;
-                cube3 = tmp;
-            }
-            else if (!neg)
-            {
-                //Debug.Log("not neg");
-                tmp = cube2;
-                cube2 = cube4;
-                cube4 = tmp;
-            }*/
-        }
+            int lastRow = _numCubes - 1;
 
-    bool CheckWinCondition()
-    {
-        Face up = new Face();
-        Face down = new Face();
-        Face right = new Face();
-        Face left = new Face();
-        Face back = new Face();
-        Face front = new Face();
-
-        int lastRow = _numCubes - 1;
-
-        for (int i = 0; i <= lastRow; i++)
+            /* Set the 6 faces of the cube in order to check if it's finish */
+            for (int i = 0; i <= lastRow; i++)
         {
             for (int j = 0; j <= lastRow; j++)
             {
@@ -933,14 +886,16 @@ public class RubiksCube : MonoBehaviour
             }
         }
 
-        if (up.CheckFaceDone(1, 0.1f) &&
-            down.CheckFaceDone(1, 0.1f) &&
-            right.CheckFaceDone(0, 0.1f) &&
-            left.CheckFaceDone(0, 0.1f) &&
-            back.CheckFaceDone(2, 0.1f) &&
-            front.CheckFaceDone(2, 0.1f))
+        /* check if each face are done */
+        if (up.CheckFaceDone() &&
+            down.CheckFaceDone() &&
+            right.CheckFaceDone() &&
+            left.CheckFaceDone() &&
+            back.CheckFaceDone() &&
+            front.CheckFaceDone())
             return true;
 
+        /* all faces are done so Rubiks Cube is done */
         return false;
     }
 

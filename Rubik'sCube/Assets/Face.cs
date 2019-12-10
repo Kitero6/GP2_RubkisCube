@@ -57,67 +57,96 @@ public class Face
 
     public bool CheckFaceDone()
     {
-        List<Quaternion> SpriteRot = new List<Quaternion>();
+        List<Transform> SpriteRot = new List<Transform>();
         List<Sprite> SpritePossible = new List<Sprite>();
 
-        int index = 0;
-        if (_cubeInFace.Count % 2 == 1)
-            index = ((_cubeInFace.Count - 1) / 2) + 1;
-        else
-            index = ((_cubeInFace.Count - 1) / 2);
+        /* Take the center approximative of the face */
+        int index = TakeIndexOfCubeInCenterOfFace();
 
-        Cube currentCube = _cubeInFace[index -1 ];
+        Cube currentCube = _cubeInFace[index];
+        /* take all sprite on the cube center approximative of the face with the rotation associated */
         for (int i = 0; i < currentCube._spriteList.Count; i++)
         {
             SpritePossible.Add(currentCube._spriteList[i].sprite);
-            SpriteRot.Add(currentCube._spriteList[i].transform.rotation);
+            SpriteRot.Add(currentCube._spriteList[i].transform);
         }
 
-        SpriteRenderer currentSpriteRenderer = null;
         for (int i = 0; i < _cubeInFace.Count; i++)
         {
             currentCube = _cubeInFace[i];
 
             int j = 0;
+            /* check if one sprite on current cube can be here */
             if (!SpriteIsPossible(currentCube, SpritePossible, ref j))
-                return false;
-
-            currentSpriteRenderer = currentCube._spriteList[j];
-
-            bool At90degre = false;
-            switch (switchPosition)
             {
-                case 0:
-                    if (currentSpriteRenderer.transform.rotation.eulerAngles.y < SpriteRot[0].rotation.eulerAngles.y + epsilon &&
-                        currentSpriteRenderer.transform.rotation.eulerAngles.y > SpriteRot[0].rotation.eulerAngles.y - epsilon &&
-                        currentSpriteRenderer.transform.rotation.eulerAngles.x < SpriteRot[0].rotation.eulerAngles.x + epsilon &&
-                        currentSpriteRenderer.transform.rotation.eulerAngles.x > SpriteRot[0].rotation.eulerAngles.x - epsilon)
-                        At90degre = true;
-                    break;
-
-                case 1:
-                    if (currentSpriteRenderer.transform.rotation.eulerAngles.x < SpriteRot[0].rotation.eulerAngles.x + epsilon &&
-                        currentSpriteRenderer.transform.rotation.eulerAngles.x > SpriteRot[0].rotation.eulerAngles.x - epsilon &&
-                        currentSpriteRenderer.transform.rotation.eulerAngles.y < SpriteRot[0].rotation.eulerAngles.y + epsilon &&
-                        currentSpriteRenderer.transform.rotation.eulerAngles.y > SpriteRot[0].rotation.eulerAngles.y - epsilon)
-                        At90degre = true;
-                    break;
-
-                case 2:
-                    if (currentSpriteRenderer.transform.rotation.eulerAngles.x < SpriteRot[0].rotation.eulerAngles.x + epsilon &&
-                        currentSpriteRenderer.transform.rotation.eulerAngles.x > SpriteRot[0].rotation.eulerAngles.x - epsilon &&
-                        currentSpriteRenderer.transform.rotation.eulerAngles.y < SpriteRot[0].rotation.eulerAngles.y + epsilon &&
-                        currentSpriteRenderer.transform.rotation.eulerAngles.y > SpriteRot[0].rotation.eulerAngles.y - epsilon)
-                        At90degre = true;
-                    break;
-
-                default:
-                    break;
+                return false;
             }
 
-            if (!At90degre)
+            /* check if cube is at his right place */
+            if (!TestIsFinishCube(currentCube, SpritePossible, SpriteRot))
+            {
                 return false;
+            }
         }
+        return true;
+    }
+
+    public bool SpriteIsPossible(Cube currentCube, List<Sprite> SpritePossible, ref int index)
+    {
+        bool isPossible = false;
+
+        // Search if a sprite on the current cube is possible to complete the face
+        for (int i = 0; i < currentCube._spriteList.Count; i++)
+        {
+            for (int j = 0; j < SpritePossible.Count; j++)
+            {
+                if (currentCube._spriteList[i].sprite == SpritePossible[j])
+                {
+                    // one sprite could complete face
+                    isPossible = true;
+                    index = i;
+                    break;
+                }
+            }
+        }
+        // none sprite could complete face
+        return isPossible;
+    }
+
+    public int TakeIndexOfCubeInCenterOfFace()
+    {
+        // Take index of a cube in center of the face (with only one sprite)
+        int index = 0;
+        if (_cubeInFace.Count % 2 == 1)
+            index = ((_cubeInFace.Count - 1) / 2);
+        else
+            index = ((_cubeInFace.Count) / 2) + 1;
+        return index;
+    }
+
+    public bool TestIsFinishCube(Cube currentCube, List<Sprite> SpritePossible, List<Transform> SpriteRot)
+    {
+        /* Check for each Sprite of cube if it is the same than one sprite possible for the face,
+            then, check if rotation of sprite is egual in x and y */
+
+
+        double epsilon = 0.1;
+       SpriteRenderer currentSpriteRenderer = null;
+       for (int j = 0; j < currentCube._spriteList.Count; j++)
+       {
+           currentSpriteRenderer = currentCube._spriteList[j];
+           for (int k = 0; k < SpritePossible.Count; k++)
+           {
+                if (currentSpriteRenderer.sprite == SpritePossible[k])
+                {
+                    if (!(currentSpriteRenderer.transform.rotation.eulerAngles.y < SpriteRot[k].rotation.eulerAngles.y + epsilon &&
+                        currentSpriteRenderer.transform.rotation.eulerAngles.y > SpriteRot[k].rotation.eulerAngles.y - epsilon &&
+                        currentSpriteRenderer.transform.rotation.eulerAngles.x < SpriteRot[k].rotation.eulerAngles.x + epsilon &&
+                        currentSpriteRenderer.transform.rotation.eulerAngles.x > SpriteRot[k].rotation.eulerAngles.x - epsilon))
+                        return false;
+                }
+           }
+       }
         return true;
     }
 }
