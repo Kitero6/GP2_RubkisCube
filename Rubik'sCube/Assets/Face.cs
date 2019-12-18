@@ -5,7 +5,6 @@ using UnityEngine;
 public class Face
 {
     public GameObject _gameObject = null;
-    public Vector3 _centerOfFace = Vector3.zero;
 
     public List<Cube> _cubeInFace = null;
 

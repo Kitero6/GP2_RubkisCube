@@ -895,6 +895,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 877618353}
+  - component: {fileID: 877618356}
   - component: {fileID: 877618355}
   - component: {fileID: 877618354}
   m_Layer: 0
@@ -959,7 +960,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 994358afc0f132549b88857580167a8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _cube: {fileID: 3387356873453967653, guid: 8d932bac6d3ad2e4d83bb098f7f258fe, type: 3}
   _camera: {fileID: 963194227}
   _rubiksAcceleration: 100
   _rubiksMaxSpeed: 200
@@ -971,13 +971,26 @@ MonoBehaviour:
   _cameraZoomSpeed: 2
   _faceToNeutralRotationSpeed: 360
   _scrambleSpeed: 4000
+--- !u!114 &877618356
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 877618352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3c875c3cbf7bc144bb55f05569a61d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _cube: {fileID: 3387356873453967653, guid: 8d932bac6d3ad2e4d83bb098f7f258fe, type: 3}
   _white: {fileID: 21300000, guid: e02affd3f784e6e498e3f89ee1265492, type: 3}
   _red: {fileID: 21300000, guid: 2621bc8562b978f42914bfd8ea1380f3, type: 3}
   _orange: {fileID: 21300000, guid: c065ccc5520015d4ba3d3fd6681effb0, type: 3}
   _blue: {fileID: 21300000, guid: 6a23cf732debc9d4ab5bc076a8b898f3, type: 3}
   _green: {fileID: 21300000, guid: 52c6126f9e72d73489a9cb4d2e0c3e01, type: 3}
   _yellow: {fileID: 21300000, guid: 0dfac312d8324c34a90598620208f71a, type: 3}
-  _colorInsideCube: {r: 0.41509432, g: 0.41509432, b: 0.41509432, a: 0.48235294}
+  _colorInsideCube: {r: 0.5283019, g: 0.5283019, b: 0.5283019, a: 1}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -2757,6 +2770,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: Firework
       objectReference: {fileID: 0}
+    - target: {fileID: 4484050347652016948, guid: 57e8b9e7d8208ea46852ac77025a72b0,
+        type: 3}
+      propertyPath: InitialModule.startLifetime.scalar
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4484050347652016948, guid: 57e8b9e7d8208ea46852ac77025a72b0,
+        type: 3}
+      propertyPath: InitialModule.startSpeed.minMaxState
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4484050347652016948, guid: 57e8b9e7d8208ea46852ac77025a72b0,
+        type: 3}
+      propertyPath: InitialModule.startSpeed.minScalar
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 4484050347652016948, guid: 57e8b9e7d8208ea46852ac77025a72b0,
+        type: 3}
+      propertyPath: InitialModule.startSpeed.scalar
+      value: 60
+      objectReference: {fileID: 0}
     - target: {fileID: 4484050347652016951, guid: 57e8b9e7d8208ea46852ac77025a72b0,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2811,26 +2844,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4484050347652016948, guid: 57e8b9e7d8208ea46852ac77025a72b0,
-        type: 3}
-      propertyPath: InitialModule.startLifetime.scalar
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4484050347652016948, guid: 57e8b9e7d8208ea46852ac77025a72b0,
-        type: 3}
-      propertyPath: InitialModule.startSpeed.minMaxState
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 4484050347652016948, guid: 57e8b9e7d8208ea46852ac77025a72b0,
-        type: 3}
-      propertyPath: InitialModule.startSpeed.minScalar
-      value: 40
-      objectReference: {fileID: 0}
-    - target: {fileID: 4484050347652016948, guid: 57e8b9e7d8208ea46852ac77025a72b0,
-        type: 3}
-      propertyPath: InitialModule.startSpeed.scalar
-      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 4484050347936782735, guid: 57e8b9e7d8208ea46852ac77025a72b0,
         type: 3}

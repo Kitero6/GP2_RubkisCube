@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RubiksCube : MonoBehaviour
+public class RubiksCubeController : MonoBehaviour
 {
-    [SerializeField] private GameObject _cube = null;
-    [SerializeField] private Camera     _camera = null;
+    private RubiksCubeModel _model  = null;
+    private System.Random   _random = null;
+    private Face            _face   = null;
+
+    [SerializeField] private Camera _camera = null;
 
     #region Cube Control Parameters
     [Header("User Rubik's Cube Control")]
@@ -18,7 +21,6 @@ public class RubiksCube : MonoBehaviour
     private Vector2                     _rubiksSpeed        = Vector2.zero;
     private Vector2                     _rubiksLastSpeed    = Vector2.zero;
     private float                       _rubiksLerpProgress = 0.0f;
-    private float                       _rubiksMaxSpeedSqr  = 0.0f;
     #endregion
 
     #region Camera Control Parameters
@@ -31,13 +33,13 @@ public class RubiksCube : MonoBehaviour
     private float                       _currZoom = 0.5f;
     #endregion
 
+    #region Smooth Control parameters
     [Header("Smooth Control")]
     [SerializeField] private float _faceToNeutralRotationSpeed = 145.0f;
     [SerializeField] private float _scrambleSpeed = 1300.0f;
+    #endregion
 
-    private int         _numCubes = 3;
     private GameObject  _clickedCube = null;
-    private Vector3     _positionOfClickedCube = Vector3.zero;
     private Vector3     _normal = Vector3.zero;
     private Vector3     _localNormal = Vector3.zero;
     private Vector3     _localDirection1 = Vector3.zero;
@@ -51,37 +53,28 @@ public class RubiksCube : MonoBehaviour
     private bool _isUserInputLocked = false;
     private bool _isRotationLocked = false; 
 
-    Face _face = null;
-    Cube[,,] _listCube = null;
-
-    [Header("Faces")]
-    [SerializeField] Sprite _white;
-    [SerializeField] Sprite _red;
-    [SerializeField] Sprite _orange;
-    [SerializeField] Sprite _blue;
-    [SerializeField] Sprite _green;
-    [SerializeField] Sprite _yellow;
-    [SerializeField] Color _colorInsideCube = new Color(0, 0, 0, 1);
-
-    private System.Random _random = null;
-
     public delegate void NoParamDelegate();
     public NoParamDelegate onCompletition;
     public NoParamDelegate onScrambleEnd;
 
-    // Start is called before the first frame update
     void Start()
     {
-        Time.timeScale = 1.0f;
-        _isRotationLocked = false;
-        _rubiksMaxSpeedSqr = _rubiksMaxSpeed * _rubiksMaxSpeed;
+        // Get the model
+        _model = GetComponent<RubiksCubeModel>();
 
+        // Instantiate the base values
+        _isUserInputLocked = false;
+        _isRotationLocked  = false;
+
+        // Instantiate the random
         _random = new System.Random();
 
+        // Create the face for the rotations
         _face = new Face();
         _face._gameObject = new GameObject("Face");
         _face._gameObject.transform.parent = transform;
 
+        // Set the camera to a base position
         _newCameraPos = Vector3.Slerp(_minCameraPosition.position, _maxCameraPosition.position, _currZoom);
         _camera.transform.position = _newCameraPos;
     }
@@ -89,151 +82,7 @@ public class RubiksCube : MonoBehaviour
     #region Cube Initialization
     public void CreateCubes(int numCubes)
     {
-        InitNewCubes(numCubes);
-
-        // Get the scale for each cube
-        Vector3 scale = _cube.transform.localScale;
-        scale /= (float)_numCubes;
-        // Also create the padding for the cubes so they're centered with their parent
-        float paddingX = scale.x * (_numCubes - 1) / 2.0f;
-        float paddingY = scale.y * (_numCubes - 1) / 2.0f;
-        float paddingZ = scale.z * (_numCubes - 1) / 2.0f;
-
-        int idTmp = 0;
-
-        // Create n*n*n cubes
-        for (int i = 0; i < _numCubes; ++i)
-        {
-            for (int j = 0; j < _numCubes; ++j)
-            {
-                for (int k = 0; k < _numCubes; ++k)
-                {
-                    // Get the position of the current cube
-                    float xPos = i * scale.x - paddingX;
-                    float yPos = j * scale.y - paddingY;
-                    float zPos = k * scale.z - paddingZ;
-
-                    // Create the cube at its location and set its parent its scale and name
-                    GameObject newObject = Instantiate(_cube, transform.position + new Vector3(xPos, yPos, zPos), Quaternion.identity);
-                    newObject.transform.parent = transform;
-                    newObject.transform.localScale = scale;
-                    newObject.name = "Cube" + i + j + k;
-
-                    Cube cube = newObject.GetComponent<Cube>();
-                    if (cube)
-                    {
-                        cube.Set(transform.position + new Vector3(xPos, yPos, zPos), ++idTmp, _colorInsideCube);
-                        SetFaces(ref cube, i, j, k, _numCubes - 1);
-
-                        _listCube[i, j, k] = cube;
-                    }
-                }
-            }
-        }
-    }
-
-    void InitNewCubes(int numCubes)
-    {
-        // Remove all the created cubes
-        if (_listCube != null)
-            for (int i = 0; i < _numCubes; i++)
-                for (int j = 0; j < _numCubes; j++)
-                    for (int k = 0; k < _numCubes; k++)
-                        Destroy(_listCube[i, j, k].gameObject);
-
-        // change the number of cubes
-        _numCubes = numCubes;
-        // Create the list
-        _listCube = new Cube[_numCubes, _numCubes, _numCubes];
-        // Reset the rotation
-        transform.rotation = Quaternion.identity;
-    }
-
-    void SetFaces(ref Cube cube, int i, int j, int k, int lastRow)
-    {
-        if (i == 0)
-            AddRed(ref cube);
-        else if (i == lastRow)
-            AddOrange(ref cube);
-
-        if (j == 0)
-            AddWhite(ref cube);
-        else if (j == lastRow)
-            AddYellow(ref cube);
-
-        if (k == 0)
-            AddBlue(ref cube);
-        else if (k == lastRow)
-            AddGreen(ref cube);
-    }
-
-    void AddWhite(ref Cube cube)
-    {
-        GameObject gameObject = new GameObject();
-        SpriteRenderer sr = gameObject.AddComponent<SpriteRenderer>();
-        gameObject.transform.parent = cube.transform;
-        cube._spriteList.Add(sr);
-
-        SetSprite(ref sr, ref _white, "White Face", new Vector3(0, -0.51f, 0), new Vector3(90, 0, 0));
-    }
-
-    void AddYellow(ref Cube cube)
-    {
-        GameObject gameObject = new GameObject();
-        SpriteRenderer sr = gameObject.AddComponent<SpriteRenderer>();
-        sr.transform.SetParent(cube.transform);
-        cube._spriteList.Add(sr);
-
-        SetSprite(ref sr, ref _yellow, "Yellow Face", new Vector3(0, 0.51f, 0), new Vector3(90, 0, 0));
-    }
-
-    void AddOrange(ref Cube cube)
-    {
-        GameObject gameObject = new GameObject();
-        SpriteRenderer sr = gameObject.AddComponent<SpriteRenderer>();
-        sr.transform.SetParent(cube.transform);
-        cube._spriteList.Add(sr);
-
-        SetSprite(ref sr, ref _orange, "Orange Face", new Vector3(0.51f, 0, 0), new Vector3(0, 90, 0));
-    }
-
-    void AddRed(ref Cube cube)
-    {
-        GameObject gameObject = new GameObject();
-        SpriteRenderer sr = gameObject.AddComponent<SpriteRenderer>();
-        sr.transform.SetParent(cube.transform);
-        cube._spriteList.Add(sr);
-
-        SetSprite(ref sr, ref _red, "Red Face", new Vector3(-0.51f, 0, 0), new Vector3(0, 90, 0));
-    }
-
-    void AddBlue(ref Cube cube)
-    {
-        GameObject gameObject = new GameObject();
-        SpriteRenderer sr = gameObject.AddComponent<SpriteRenderer>();
-        sr.transform.SetParent(cube.transform);
-        cube._spriteList.Add(sr);
-
-        SetSprite(ref sr, ref _blue, "Blue Face", new Vector3(0, 0, -0.51f), new Vector3(0, 0, 0));
-    }
-
-    void AddGreen(ref Cube cube)
-    {
-        GameObject gameObject = new GameObject();
-        SpriteRenderer sr = gameObject.AddComponent<SpriteRenderer>();
-        sr.transform.SetParent(cube.transform);
-        cube._spriteList.Add(sr);
-
-        SetSprite(ref sr, ref _green, "Green Face", new Vector3(0, 0, 0.51f), new Vector3(0, 0, 0));
-    }
-
-    void SetSprite(ref SpriteRenderer sr, ref Sprite sprite, string name, Vector3 locPosition, Vector3 rotation)
-    {
-        sr.sprite = sprite;
-        sr.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-        sr.transform.rotation = Quaternion.Euler(rotation);
-        sr.transform.localPosition = locPosition;
-        sr.name = name;
+        _model.CreateCubes(numCubes);
     }
 
     // Update is called once per frame
@@ -251,7 +100,7 @@ public class RubiksCube : MonoBehaviour
         {
             // Get the mouse wheel movement
             _currZoom += Input.GetAxis("Mouse ScrollWheel") * _cameraZoomSpeed;
-            _currZoom = Mathf.Clamp(_currZoom, 0, 1);
+            _currZoom =  Mathf.Clamp(_currZoom, 0, 1);
 
             // Get the new position
             _newCameraPos = Vector3.Slerp(_minCameraPosition.position, _maxCameraPosition.position, _currZoom);
@@ -287,10 +136,10 @@ public class RubiksCube : MonoBehaviour
             GetScrambleValues(out idXCube, out idYCube, out idZCube, out rotation, out numTurn);
 
             // Get the corresponding face
-            GetFace(ref _listCube[idXCube, idYCube, idZCube], rotation);
+            _model.GetFace(ref _face, idXCube, idYCube, idZCube, rotation);
 
             // Update the face in the model
-            UpdateCubePosInRubiksCubeArray(numTurn, rotation);
+            _model.UpdateCubePosInRubiksCubeArray(numTurn, rotation);
 
             // Set the face children for the rotation
             _face.SetCubesToChildren();
@@ -307,9 +156,9 @@ public class RubiksCube : MonoBehaviour
     void GetScrambleValues(out int idXCube, out int idYCube, out int idZCube, out Vector3 rotation, out int numTurn)
     {
         // Get random id of the cube to rotate
-        idXCube = _random.Next(0, _numCubes);
-        idYCube = _random.Next(0, _numCubes);
-        idZCube = _random.Next(0, _numCubes);
+        idXCube = _random.Next(0, _model.NumCubes);
+        idYCube = _random.Next(0, _model.NumCubes);
+        idZCube = _random.Next(0, _model.NumCubes);
 
         // Get a random rotation
         int idRotation = _random.Next(0, 3);
@@ -383,7 +232,7 @@ public class RubiksCube : MonoBehaviour
     void SlowRubiksSpeed()
     {
         // If the cube is rotating faster than the max speed
-        if (_rubiksSpeed.sqrMagnitude > _rubiksMaxSpeedSqr)
+        if (_rubiksSpeed.sqrMagnitude > _rubiksMaxSpeed * _rubiksMaxSpeed)
         {
             // Set the speed to max speed (+ the direction)
             _rubiksSpeed = _rubiksSpeed.normalized * _rubiksMaxSpeed;
@@ -547,16 +396,19 @@ public class RubiksCube : MonoBehaviour
 
     void LockRotation(ref Vector3 playerDirection, ref Vector3 positionHit)
     {
+        // Lock the rotation for the face to start rotating
         LockGetRotationAndScreenForward(ref playerDirection);
-
         _isRotationLocked = true;
-        _userAngle = 0.0f;
 
-        CalcCenter(_rotation, _clickedCube.transform.position);
+        // Reset the values of the value that the user has moved
+        _userAngle = 0.0f;
         
+        // Get the clicked cube
         Cube cubeClicked = _clickedCube.GetComponent<Cube>();
 
-        GetFace(ref cubeClicked, _rotation);
+        // Get the face from the model using the clicked cube and the rotation
+        _model.FillFace(ref _face, ref cubeClicked, _rotation);
+        // The all the cubes' parents to the face
         _face.SetCubesToChildren();
     }
 
@@ -616,7 +468,7 @@ public class RubiksCube : MonoBehaviour
         if (_clickedCube && !_isUserInputLocked)
         {
             // Update the model with the number of turn the player did
-            UpdateCubePosInRubiksCubeArray(Mathf.RoundToInt(_userAngle / 90) % 4, _rotation);
+            _model.UpdateCubePosInRubiksCubeArray(Mathf.RoundToInt(_userAngle / 90) % 4, _rotation);
 
             // Get the current rotation
             Quaternion baseFaceRotation = _face._gameObject.transform.localRotation;
@@ -702,316 +554,9 @@ public class RubiksCube : MonoBehaviour
         _clickedCube = null;
 
         // Check if the cube is completed
-        if (CheckWinCondition())
+        if (_model.CheckWinCondition())
             onCompletition();
     }
     #endregion
-
-    void GetFace(ref Cube cube, Vector3 rotationVector)
-    {
-        int lastRow = _numCubes - 1;
-
-        _face._cubeInFace.Clear();
-
-        _positionOfClickedCube = GetPosOfCubeInListOfCube(ref cube);
-
-        if (rotationVector == Vector3.right || rotationVector == -Vector3.right)
-        {
-            //Take all cube in the face
-            for (int j = 0; j < _numCubes; j++)
-                for (int k = 0; k < _numCubes; k++)
-                    _face._cubeInFace.Add(_listCube[(int)_positionOfClickedCube.x, j, k]);
-        }
-        else if (rotationVector == Vector3.up || rotationVector == -Vector3.up)
-        {
-            //Take all cube in the face
-            for (int i = 0; i < _numCubes; i++)
-                for (int k = 0; k < _numCubes; k++)
-                    _face._cubeInFace.Add(_listCube[i, (int)_positionOfClickedCube.y, k]);
-        }
-        else if (rotationVector == Vector3.forward || rotationVector == -Vector3.forward)
-        {
-            //Take all cube in the face
-            for (int i = 0; i < _numCubes; i++)
-                for (int j = 0; j < _numCubes; j++)
-                    _face._cubeInFace.Add(_listCube[i, j, (int)_positionOfClickedCube.z]);
-        }
-    }
-
-    Vector3 GetPosOfCubeInListOfCube(ref Cube cube)
-    {
-        int lastRow = _numCubes - 1;
-
-        /* Optimisation : Check only cube on the outside of the rubiks cube */
-
-        /* browse on the face up and down */
-        for (int j = 0; j < _numCubes; ++j)
-        {
-            for (int k = 0; k < _numCubes; ++k)
-            {
-                if (cube == _listCube[0, j, k])
-                {
-                    return new Vector3(0, j, k );
-                }
-                else if (cube == _listCube[lastRow, j, k])
-                {
-                    return new Vector3( lastRow, j, k );
-                }
-            }
-        }
-
-        /* browse on the face right and left */
-        for (int i = 0; i < _numCubes; ++i)
-        {
-            for (int k = 0; k < _numCubes; ++k)
-            {
-                if (cube == _listCube[i, 0, k])
-                {
-                    return new Vector3(i, 0, k );
-                }
-                else if (cube == _listCube[i, lastRow, k])
-                {
-                    return new Vector3(i, lastRow, k );
-                }
-            }
-        }
-
-        /* browse on the face front and back */
-        for (int i = 0; i < _numCubes; ++i)
-        {
-            for (int j = 0; j < _numCubes; ++j)
-            {
-                if (cube == _listCube[i, j, 0])
-                {
-                    return new Vector3(i, j, 0 );
-                }
-                else if (cube == _listCube[i, j, lastRow])
-                { 
-                    return new Vector3(i, j, lastRow );
-                }
-            }
-        }
-
-        return new Vector3( 0, 0, 0 );
-    }
-
-    void CalcCenter(Vector3 normalRotation, Vector3 posHit)
-    {
-        Vector3 center = (Vector3.ProjectOnPlane(-posHit, normalRotation) + posHit);
-        _face._centerOfFace = center;
-    }
-
-    void UpdateCubePosInRubiksCubeArray(int numTurn, Vector3 rotation)
-    {
-        if (numTurn == 0)
-            return;
-
-        Vector3 currRot = rotation * Mathf.Sign(numTurn);
-
-        numTurn = Mathf.Abs(numTurn);        
-
-        /* Search Which rotation have been done, in order to Update The Rube Array */
-        if (currRot == Vector3.right)
-            TurnAroundRight(numTurn, false);
-        else if (currRot == -Vector3.right)
-            TurnAroundRight(numTurn, true);
-        else if (currRot == Vector3.up)
-            TurnAroundUp(numTurn, true);
-        else if (currRot == -Vector3.up)
-            TurnAroundUp(numTurn, false);
-        else if (currRot == Vector3.forward)
-            TurnAroundForward(numTurn, false);
-        else if (currRot == -Vector3.forward)
-            TurnAroundForward(numTurn, true);
-    }
-
-    void Swap4Cube(ref Cube cube1, ref Cube cube2, ref Cube cube3, ref Cube cube4, bool neg)
-    {
-        if (!neg)
-        {
-            /* swap 4 four in counterclockwise */
-            Cube tmp = cube4;
-            cube4 = cube3;
-            cube3 = cube2;
-            cube2 = cube1;
-            cube1 = tmp;
-        }
-        else
-        {
-            /* swap 4 four in clockwise */
-            Cube tmp = cube1;
-            cube1 = cube2;
-            cube2 = cube3;
-            cube3 = cube4;
-            cube4 = tmp;
-        }
-    }
-
-        bool CheckWinCondition()
-        {
-            Face up = new Face();
-            Face down = new Face();
-            Face right = new Face();
-            Face left = new Face();
-            Face back = new Face();
-            Face front = new Face();
-
-            int lastRow = _numCubes - 1;
-
-            /* Set the 6 faces of the cube in order to check if it's finish */
-            for (int i = 0; i <= lastRow; i++)
-        {
-            for (int j = 0; j <= lastRow; j++)
-            {
-                up._cubeInFace.Add(_listCube[i, j, 0]);
-                down._cubeInFace.Add(_listCube[i, j, lastRow]);
-            }
-        }
-
-        for (int i = 0; i <= lastRow; i++)
-        {
-            for (int k = 0; k <= lastRow; k++)
-            {
-                right._cubeInFace.Add(_listCube[i, 0, k]);
-                left._cubeInFace.Add(_listCube[i, lastRow, k]);
-            }
-        }
-
-        for (int j = 0; j <= lastRow; j++)
-        {
-            for (int k = 0; k <= lastRow; k++)
-            {
-                back._cubeInFace.Add(_listCube[0, j, k]);
-                front._cubeInFace.Add(_listCube[lastRow, j, k]);
-            }
-        }
-
-        /* check if each face are done */
-        if (up.CheckFaceDone() &&
-            down.CheckFaceDone() &&
-            right.CheckFaceDone() &&
-            left.CheckFaceDone() &&
-            back.CheckFaceDone() &&
-            front.CheckFaceDone())
-            return true;
-
-        /* all faces are done so Rubiks Cube is done */
-        return false;
-    }
-
-    void TurnAroundRight(int numTurn, bool neg)
-    {
-        int lastRow = _numCubes - 1;
-        int firstCube = 0;
-
-        int index = 0;
-        int TempNumOfCubePerSide = _numCubes;
-
-        while (TempNumOfCubePerSide > 1)
-        {
-            if (firstCube + index != lastRow)
-            {
-                //calc
-                for (int i = 0; i < numTurn; i++)
-                {
-
-                    Swap4Cube(ref _listCube[(int)_positionOfClickedCube.x, firstCube + index, firstCube],
-                              ref _listCube[(int)_positionOfClickedCube.x, lastRow, firstCube + index],
-                              ref _listCube[(int)_positionOfClickedCube.x, lastRow - index, lastRow],
-                              ref _listCube[(int)_positionOfClickedCube.x, firstCube, lastRow - index], neg);
-
-                    /*Debug.Log(new Vector3((int)_positionOfClickedCube.x, lastRow, firstCube + index));
-                    Debug.Log(new Vector3((int)_positionOfClickedCube.x, lastRow - index, lastRow));
-                    Debug.Log(new Vector3((int)_positionOfClickedCube.x, firstCube, lastRow - index));*/
-                }
-                index++;
-            }
-            else
-            {
-                TempNumOfCubePerSide -= 2;
-                firstCube++;
-                lastRow--;
-                index = 0;
-            }
-        }
-
-    }
-
-    void TurnAroundUp(int numTurn, bool neg)
-    {
-        int lastRow = _numCubes - 1;
-        int firstCube = 0;
-
-        int index = 0;
-        int TempNumOfCubePerSide = _numCubes;
-
-        while (TempNumOfCubePerSide > 1)
-        {
-            if (firstCube + index != lastRow)
-            {
-                //calc
-                for (int i = 0; i < numTurn; i++)
-                {
-                    /*Swap4Cube(ref _listCube[(int)_positionOfClickedCube.x, firstCube + index, firstCube],
-                              ref _listCube[(int)_positionOfClickedCube.x, lastRow, firstCube + index],
-                              ref _listCube[(int)_positionOfClickedCube.x, lastRow - index, lastRow],
-                              ref _listCube[(int)_positionOfClickedCube.x, firstCube, lastRow - index], neg);*/
-
-                    Swap4Cube(ref _listCube[firstCube + index, (int)_positionOfClickedCube.y, firstCube],
-                               ref _listCube[lastRow, (int)_positionOfClickedCube.y, firstCube + index],
-                                ref _listCube[lastRow - index, (int)_positionOfClickedCube.y, lastRow],
-                                ref _listCube[firstCube, (int)_positionOfClickedCube.y, lastRow - index], neg);
-                }
-
-                index++;
-            }
-            else
-            {
-                TempNumOfCubePerSide -= 2;
-                firstCube++;
-                lastRow--;
-                index = 0;
-            }
-        }
-
-    }
-
-    void TurnAroundForward(int numTurn, bool neg)
-    {
-        int lastRow = _numCubes - 1;
-        int firstCube = 0;
-
-        int index = 0;
-        int TempNumOfCubePerSide = _numCubes;
-
-        while (TempNumOfCubePerSide > 1)
-        {
-            if (firstCube + index != lastRow)
-            {
-                //calc
-                for (int i = 0; i < numTurn; i++)
-                {
-                    Swap4Cube(ref _listCube[firstCube + index, firstCube, (int)_positionOfClickedCube.z],
-                                ref _listCube[lastRow, firstCube + index, (int)_positionOfClickedCube.z],
-                               ref _listCube[lastRow - index, lastRow, (int)_positionOfClickedCube.z],
-                                ref _listCube[firstCube, lastRow - index, (int)_positionOfClickedCube.z], neg);
-
-                    /* Debug.Log(new Vector3(firstCube + index, firstCube, (int)_positionOfClickedCube.z));
-                     Debug.Log(new Vector3(lastRow, firstCube + index, (int)_positionOfClickedCube.z));
-                     Debug.Log(new Vector3(lastRow - index, lastRow, (int)_positionOfClickedCube.z));
-                     Debug.Log(new Vector3(firstCube, lastRow - index, (int)_positionOfClickedCube.z));*/
-                }
-
-                index++;
-            }
-            else
-            {
-                TempNumOfCubePerSide -= 2;
-                firstCube++;
-                lastRow--;
-                index = 0;
-            }
-        }
-    }
 }
 

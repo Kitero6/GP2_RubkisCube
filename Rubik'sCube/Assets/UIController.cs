@@ -43,12 +43,12 @@ public class UIController : MonoBehaviour
     private ETimerState _timerState = ETimerState.STOPPED;
     private float _timerDuration;
 
-    RubiksCube _rubiksCube = null;
+    RubiksCubeController _rubiksCube = null;
     // Start is called before the first frame update
     void Start()
     {
 
-        _rubiksCube = GetComponent<RubiksCube>();
+        _rubiksCube = GetComponent<RubiksCubeController>();
         _rubiksCube.onCompletition += OnCompletition;
         _rubiksCube.onScrambleEnd += OnScrambleEnd;
 
