@@ -29,9 +29,7 @@ public class Face
     public void SetCubesToParent(Transform parent)
     {
         for (int i = 0; i < _cubeInFace.Count; ++i)
-        {
             _cubeInFace[i].transform.parent = parent;
-        }
     }
 
     // Rotate the face around the World(0,0,0)
@@ -128,14 +126,14 @@ public class Face
         /* Check for each Sprite of cube if it is the same than one sprite possible for the face,
             then, check if rotation of sprite is egual in x and y */
 
-
-        double epsilon = 0.1;
+       double epsilon = 1.0;
        SpriteRenderer currentSpriteRenderer = null;
        for (int j = 0; j < currentCube._spriteList.Count; j++)
        {
            currentSpriteRenderer = currentCube._spriteList[j];
            for (int k = 0; k < SpritePossible.Count; k++)
            {
+                // Check if current sprite is possible in face
                 if (currentSpriteRenderer.sprite == SpritePossible[k])
                 {
                     if (!(currentSpriteRenderer.transform.rotation.eulerAngles.y < SpriteRot[k].rotation.eulerAngles.y + epsilon &&

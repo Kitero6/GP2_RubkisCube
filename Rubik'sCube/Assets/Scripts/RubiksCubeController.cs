@@ -339,13 +339,6 @@ public class RubiksCubeController : MonoBehaviour
             _localDirection1 = Vector3.forward;
             _localDirection2 = Vector3.right;
         }
-
-        //_localNormal     = _hitGameObject.transform.worldToLocalMatrix * _normal;
-        //_localDirection1 = _hitGameObject.transform.worldToLocalMatrix * _worldDirection1;
-        //_localDirection2 = _hitGameObject.transform.worldToLocalMatrix * _worldDirection2;
-        //_localNormal.Normalize();
-        //_localDirection1.Normalize();
-        //_localDirection2.Normalize();
     }
 
     void OnLeftMouseUp()
@@ -365,13 +358,9 @@ public class RubiksCubeController : MonoBehaviour
             return;
         
         if (!_isRotationLocked)
-        {
             UpdateToLockRotation();
-        }
         else
-        {
             UpdateLockedRotation();
-        }
     }
 
     void UpdateToLockRotation()
@@ -388,9 +377,7 @@ public class RubiksCubeController : MonoBehaviour
 
             // If the player has traveled more than a threshold given
             if (playerDirection.magnitude > _lockingTreshold)
-            {
                 LockRotation(ref playerDirection, ref newHitPoint);
-            }
         }
     }
 

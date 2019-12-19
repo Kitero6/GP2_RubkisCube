@@ -19,18 +19,7 @@ public class Cube : MonoBehaviour
     {
         _position = pos;
         _id = id;
-       // _cube.transform.position = pos;
+
         GetComponent<Renderer>().material.color = col;
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

@@ -4,7 +4,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIController : MonoBehaviour
+public class RubiksCubeView : MonoBehaviour
 {
     enum ETimerState
     {

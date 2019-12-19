@@ -86,6 +86,8 @@ public class RubiksCubeModel : MonoBehaviour
 
     void SetFaces(ref Cube cube, int i, int j, int k, int lastRow)
     {
+        /* Add sprite to init cube according to his position*/
+
         if (i == 0)
             AddRed(ref cube);
         else if (i == lastRow)
@@ -182,6 +184,7 @@ public class RubiksCubeModel : MonoBehaviour
 
         face._cubeInFace.Clear();
 
+        // need to know where is the clicked cube in rubiks cube's third dimension array 
         _positionOfClickedCube = GetPosOfCubeInListOfCube(ref cube);
 
         if (rotationVector == Vector3.right || rotationVector == -Vector3.right)
@@ -219,13 +222,9 @@ public class RubiksCubeModel : MonoBehaviour
             for (int k = 0; k < _numCubes; ++k)
             {
                 if (cube == _listCube[0, j, k])
-                {
                     return new Vector3(0, j, k);
-                }
                 else if (cube == _listCube[lastRow, j, k])
-                {
                     return new Vector3(lastRow, j, k);
-                }
             }
         }
 
@@ -235,13 +234,9 @@ public class RubiksCubeModel : MonoBehaviour
             for (int k = 0; k < _numCubes; ++k)
             {
                 if (cube == _listCube[i, 0, k])
-                {
                     return new Vector3(i, 0, k);
-                }
                 else if (cube == _listCube[i, lastRow, k])
-                {
                     return new Vector3(i, lastRow, k);
-                }
             }
         }
 
@@ -251,16 +246,13 @@ public class RubiksCubeModel : MonoBehaviour
             for (int j = 0; j < _numCubes; ++j)
             {
                 if (cube == _listCube[i, j, 0])
-                {
                     return new Vector3(i, j, 0);
-                }
                 else if (cube == _listCube[i, j, lastRow])
-                {
                     return new Vector3(i, j, lastRow);
-                }
             }
         }
 
+        // Cube isn't in the rubiks cube
         return new Vector3(0, 0, 0);
     }
 
@@ -321,7 +313,7 @@ public class RubiksCubeModel : MonoBehaviour
 
         int lastRow = _numCubes - 1;
 
-        /* Set the 6 faces of the cube in order to check if it's finish */
+        /* Fill the 6 faces of the cube in order to check if it's finish */
         for (int i = 0; i <= lastRow; i++)
         {
             for (int j = 0; j <= lastRow; j++)
@@ -358,7 +350,6 @@ public class RubiksCubeModel : MonoBehaviour
             front.CheckFaceDone())
             return true;
 
-        /* all faces are done so Rubiks Cube is done */
         return false;
     }
 
@@ -370,27 +361,26 @@ public class RubiksCubeModel : MonoBehaviour
         int index = 0;
         int TempNumOfCubePerSide = _numCubes;
 
+        /* Swap all cube in a face during a turn around right */
+
         while (TempNumOfCubePerSide > 1)
         {
+            // check if current cube is before the lastRow 
             if (firstCube + index != lastRow)
             {
-                //calc
+                // take 4 cubes per 4 cubes in each line to swap these cubes
                 for (int i = 0; i < numTurn; i++)
                 {
-
                     Swap4Cube(ref _listCube[(int)_positionOfClickedCube.x, firstCube + index, firstCube],
                               ref _listCube[(int)_positionOfClickedCube.x, lastRow, firstCube + index],
                               ref _listCube[(int)_positionOfClickedCube.x, lastRow - index, lastRow],
                               ref _listCube[(int)_positionOfClickedCube.x, firstCube, lastRow - index], neg);
-
-                    /*Debug.Log(new Vector3((int)_positionOfClickedCube.x, lastRow, firstCube + index));
-                    Debug.Log(new Vector3((int)_positionOfClickedCube.x, lastRow - index, lastRow));
-                    Debug.Log(new Vector3((int)_positionOfClickedCube.x, firstCube, lastRow - index));*/
                 }
                 index++;
             }
             else
             {
+                // change step (take face more in the middle)
                 TempNumOfCubePerSide -= 2;
                 firstCube++;
                 lastRow--;
@@ -408,18 +398,16 @@ public class RubiksCubeModel : MonoBehaviour
         int index = 0;
         int TempNumOfCubePerSide = _numCubes;
 
+        /* Swap all cube in a face during a turn around up */
+
         while (TempNumOfCubePerSide > 1)
         {
+            // check if current cube is before the lastRow 
             if (firstCube + index != lastRow)
             {
-                //calc
+                // take 4 cubes per 4 cubes in each line to swap these cubes
                 for (int i = 0; i < numTurn; i++)
                 {
-                    /*Swap4Cube(ref _listCube[(int)_positionOfClickedCube.x, firstCube + index, firstCube],
-                              ref _listCube[(int)_positionOfClickedCube.x, lastRow, firstCube + index],
-                              ref _listCube[(int)_positionOfClickedCube.x, lastRow - index, lastRow],
-                              ref _listCube[(int)_positionOfClickedCube.x, firstCube, lastRow - index], neg);*/
-
                     Swap4Cube(ref _listCube[firstCube + index, (int)_positionOfClickedCube.y, firstCube],
                                ref _listCube[lastRow, (int)_positionOfClickedCube.y, firstCube + index],
                                 ref _listCube[lastRow - index, (int)_positionOfClickedCube.y, lastRow],
@@ -430,6 +418,7 @@ public class RubiksCubeModel : MonoBehaviour
             }
             else
             {
+                // change step (take face more in the middle)
                 TempNumOfCubePerSide -= 2;
                 firstCube++;
                 lastRow--;
@@ -447,28 +436,26 @@ public class RubiksCubeModel : MonoBehaviour
         int index = 0;
         int TempNumOfCubePerSide = _numCubes;
 
+        /* Swap all cube in a face during a turn around forward */
+
         while (TempNumOfCubePerSide > 1)
         {
+            // check if current cube is before the lastRow 
             if (firstCube + index != lastRow)
             {
-                //calc
+                // take 4 cubes per 4 cubes in each line to swap these cubes
                 for (int i = 0; i < numTurn; i++)
                 {
                     Swap4Cube(ref _listCube[firstCube + index, firstCube, (int)_positionOfClickedCube.z],
                                 ref _listCube[lastRow, firstCube + index, (int)_positionOfClickedCube.z],
                                ref _listCube[lastRow - index, lastRow, (int)_positionOfClickedCube.z],
                                 ref _listCube[firstCube, lastRow - index, (int)_positionOfClickedCube.z], neg);
-
-                    /* Debug.Log(new Vector3(firstCube + index, firstCube, (int)_positionOfClickedCube.z));
-                     Debug.Log(new Vector3(lastRow, firstCube + index, (int)_positionOfClickedCube.z));
-                     Debug.Log(new Vector3(lastRow - index, lastRow, (int)_positionOfClickedCube.z));
-                     Debug.Log(new Vector3(firstCube, lastRow - index, (int)_positionOfClickedCube.z));*/
                 }
-
                 index++;
             }
             else
             {
+                // change step (take face more in the middle)
                 TempNumOfCubePerSide -= 2;
                 firstCube++;
                 lastRow--;
