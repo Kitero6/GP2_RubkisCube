@@ -79,37 +79,10 @@ public class RubiksCubeController : MonoBehaviour
         _camera.transform.position = _newCameraPos;
     }
 
-    #region Cube Initialization
     public void CreateCubes(int numCubes)
     {
         _model.CreateCubes(numCubes);
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        UpdateCameraMovement();
-
-        UpdateRotateCube();
-    }
-
-    void UpdateCameraMovement()
-    {
-        // If the mouse wheel moved
-        if (Input.GetAxis("Mouse ScrollWheel") != 0f)
-        {
-            // Get the mouse wheel movement
-            _currZoom += Input.GetAxis("Mouse ScrollWheel") * _cameraZoomSpeed;
-            _currZoom =  Mathf.Clamp(_currZoom, 0, 1);
-
-            // Get the new position
-            _newCameraPos = Vector3.Slerp(_minCameraPosition.position, _maxCameraPosition.position, _currZoom);
-        }
-
-        // Lerp the camera to the new position
-        _camera.transform.position = Vector3.Slerp(_camera.transform.position, _newCameraPos, 0.2f);
-    }
-    #endregion
 
     #region Scramble
     public bool ScrambleCube(int iterations)
@@ -146,7 +119,7 @@ public class RubiksCubeController : MonoBehaviour
 
             // Get the rotation to reach and rotate
             Quaternion endQuat = Quaternion.AngleAxis(90 * numTurn, rotation);
-            yield return StartCoroutine(RotateBackToNormal(Quaternion.identity, endQuat, _scrambleSpeed));
+            yield return StartCoroutine(RotateBackToNormal(Quaternion.identity, endQuat, _scrambleSpeed, true));
         }
 
         _isUserInputLocked = false;
@@ -177,6 +150,34 @@ public class RubiksCubeController : MonoBehaviour
     }
     #endregion
 
+    // Update is called once per frame
+    void Update()
+    {
+        UpdateCameraMovement();
+
+        UpdateRotateCube();
+    }
+
+    #region Camera Control
+    void UpdateCameraMovement()
+    {
+        // If the mouse wheel moved
+        if (Input.GetAxis("Mouse ScrollWheel") != 0f)
+        {
+            // Get the mouse wheel movement
+            _currZoom += Input.GetAxis("Mouse ScrollWheel") * _cameraZoomSpeed;
+            _currZoom = Mathf.Clamp(_currZoom, 0, 1);
+
+            // Get the new position
+            _newCameraPos = Vector3.Slerp(_minCameraPosition.position, _maxCameraPosition.position, _currZoom);
+        }
+
+        // Lerp the camera to the new position
+        _camera.transform.position = Vector3.Slerp(_camera.transform.position, _newCameraPos, 0.2f);
+    }
+    #endregion
+
+    #region Rubik's Rotation
     void UpdateRotateCube()
     {
         UpdateRubiksRotation();
@@ -184,7 +185,6 @@ public class RubiksCubeController : MonoBehaviour
         UpdateFacesRotation();
     }
 
-    #region Rubik's Rotation
     void UpdateRubiksRotation()
     {
         // Check for the right mouse click
@@ -505,7 +505,7 @@ public class RubiksCubeController : MonoBehaviour
         return angle;
     }
 
-    IEnumerator RotateBackToNormal(Quaternion qStart, Quaternion qEnd, float rotationSpeed)
+    IEnumerator RotateBackToNormal(Quaternion qStart, Quaternion qEnd, float rotationSpeed, bool keepUserLocked = false)
     {
         float progress = 0.0f;
         float step = rotationSpeed / Quaternion.Angle(qStart, qEnd);
@@ -525,17 +525,18 @@ public class RubiksCubeController : MonoBehaviour
         // Set the rotation to the exact given rotation
         _face._gameObject.transform.localRotation = qEnd;
 
-        ResetAfter();
+        ResetAfter(keepUserLocked);
     }
 
-    void ResetAfter()
+    void ResetAfter(bool keepUserLocked)
     {
         _face.SetCubesToParent(transform);
         _face.Reset();
         _userAngle = 0;
 
-        _isUserInputLocked = false;
         _isRotationLocked = false;
+        if (!keepUserLocked)
+            _isUserInputLocked = false;
 
         // Reset the object that we were clicking
         _clickedCube = null;
